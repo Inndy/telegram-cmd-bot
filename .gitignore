@@ -1,0 +1,9 @@
+commands.json
+whitelist.txt
+.env
+.venv/
+__pycache__/
+build/
+*.pyc
+*.egg-info
+*.service

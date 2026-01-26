@@ -1,0 +1,20 @@
+[project]
+name = "telegram-cmd-bot"
+version = "0.1.0"
+description = "A Telegram bot to run shell commands"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "python-dotenv>=1.2.1",
+    "python-telegram-bot>=22.6",
+]
+
+[project.scripts]
+telegram-cmd-bot = "telegram_cmd_bot.main:main"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

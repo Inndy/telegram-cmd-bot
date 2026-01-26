@@ -1,0 +1,25 @@
+{
+    "start": {
+        "shell": "echo 'Hello! I am ready.'",
+        "description": "Check if bot is alive"
+    },
+    "ping": {
+        "shell": [
+            "ping",
+            "-c",
+            "3"
+        ],
+        "allow_args": true,
+        "description": "Ping Google DNS (or user specified host)"
+    },
+    "disk": {
+        "shell": "df -h",
+        "description": "Check disk usage"
+    },
+    "whoami": {
+        "shell": [
+            "whoami"
+        ],
+        "description": "Check current user"
+    }
+}

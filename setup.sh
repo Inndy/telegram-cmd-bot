@@ -13,7 +13,19 @@ NC='\033[0m'
 
 echo -e "${GREEN}Starting setup for $SERVICE_NAME...${NC}"
 
-# 1. Setup Virtual Environment
+# 1. Setup Configuration Files
+if [ ! -f "commands.json" ]; then
+    if [ -f "commands.json.example" ]; then
+        echo -e "${GREEN}Copying commands.json.example to commands.json...${NC}"
+        cp commands.json.example commands.json
+    else
+        echo -e "${RED}Warning: commands.json.example not found!${NC}"
+    fi
+else
+    echo "commands.json already exists, skipping..."
+fi
+
+# 2. Setup Virtual Environment
 if command -v uv &> /dev/null; then
     echo -e "${GREEN}uv detected.${NC}"
     if [ -f "uv.lock" ]; then
@@ -50,7 +62,7 @@ SCRIPT_PATH="$PWD/$MAIN_SCRIPT"
 USER_NAME=$(whoami)
 GROUP_NAME=$(id -gn)
 
-# 2. Generate Systemd Service
+# 3. Generate Systemd Service
 SERVICE_FILE="$SERVICE_NAME.service"
 
 echo -e "${GREEN}Generating systemd service file: $SERVICE_FILE${NC}"
@@ -73,7 +85,7 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
-# 3. Instructions
+# 4. Instructions
 echo -e "${GREEN}Setup complete!${NC}"
 echo ""
 echo "To install the systemd service, run the following commands:"

@@ -10,7 +10,8 @@
             "3"
         ],
         "allow_args": true,
-        "description": "Ping Google DNS (or user specified host)"
+        "description": "Ping Google DNS (or user specified host)",
+		"singleton": true
     },
     "disk": {
         "shell": "df -h",

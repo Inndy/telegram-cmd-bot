@@ -1,10 +1,22 @@
 
 import os
 import subprocess
+import asyncio
+from contextlib import asynccontextmanager
 
 WHITELIST_FILE = "whitelist.txt"
 _whitelist_cache = set()
 _last_mtime = 0
+
+# Singleton command tracking
+_running_singletons: set[str] = set()
+_singleton_lock = asyncio.Lock()
+
+class CommandAlreadyRunningError(Exception):
+    """Raised when attempting to execute a singleton command that's already running."""
+    def __init__(self, command_name: str):
+        self.command_name = command_name
+        super().__init__(f"Command '{command_name}' is already running")
 
 def get_whitelist_path():
     if os.path.exists(WHITELIST_FILE):
@@ -48,6 +60,38 @@ def get_whitelist():
 
 def check_whitelist(user_id):
     return user_id in get_whitelist()
+
+@asynccontextmanager
+async def singleton_guard(command_name: str, is_singleton: bool):
+    """
+    Context manager for singleton command execution tracking.
+
+    Args:
+        command_name: Name of the command being executed
+        is_singleton: Whether the command has singleton enforcement
+
+    Raises:
+        CommandAlreadyRunningError: If singleton command is already running
+
+    Ensures cleanup even if command fails or handler crashes.
+    """
+    if not is_singleton:
+        # Non-singleton commands pass through with zero overhead
+        yield
+        return
+
+    # Check and mark as running
+    async with _singleton_lock:
+        if command_name in _running_singletons:
+            raise CommandAlreadyRunningError(command_name)
+        _running_singletons.add(command_name)
+
+    try:
+        yield
+    finally:
+        # Always cleanup, even on exception
+        async with _singleton_lock:
+            _running_singletons.discard(command_name)
 
 async def execute_command(cmd, args=None):
     if args is None:

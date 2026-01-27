@@ -6,7 +6,12 @@ from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 from telegram.helpers import escape_markdown
-from .bot_logic import check_whitelist, execute_command
+from .bot_logic import (
+    check_whitelist,
+    execute_command,
+    singleton_guard,
+    CommandAlreadyRunningError
+)
 
 # Configure logging
 logging.basicConfig(
@@ -65,14 +70,36 @@ async def generic_command_handler(update: Update, context: ContextTypes.DEFAULT_
     if shell_cmd:
         if args and not cmd_config.get("allow_args", False):
             await update.message.reply_text("⚠️ This command does not accept arguments.")
-            args = [] # Reset args to ignore them
+            args = []
 
-        escaped_text = escape_markdown(f"Executing: {shell_cmd} with args: {args}...", version=2, entity_type='PRE')
-        await update.message.reply_text(f"```\n{escaped_text}\n```", parse_mode='MarkdownV2')
+        # Check singleton status from config
+        is_singleton = cmd_config.get("singleton", False)
 
-        results = await execute_command(shell_cmd, args)
-        escaped_results = escape_markdown(results, version=2, entity_type='PRE')
-        await update.message.reply_text(f"```\n{escaped_results}\n```", parse_mode='MarkdownV2')
+        try:
+            # Use singleton guard to prevent parallel execution
+            async with singleton_guard(command_name, is_singleton):
+                escaped_text = escape_markdown(
+                    f"Executing: {shell_cmd} with args: {args}...",
+                    version=2,
+                    entity_type='PRE'
+                )
+                await update.message.reply_text(
+                    f"```\n{escaped_text}\n```",
+                    parse_mode='MarkdownV2'
+                )
+
+                results = await execute_command(shell_cmd, args)
+                escaped_results = escape_markdown(results, version=2, entity_type='PRE')
+                await update.message.reply_text(
+                    f"```\n{escaped_results}\n```",
+                    parse_mode='MarkdownV2'
+                )
+
+        except CommandAlreadyRunningError:
+            # Singleton command is already running - notify user
+            await update.message.reply_text(
+                f"⏳ Command '{command_name}' is already running. Please wait for it to complete."
+            )
     else:
         await update.message.reply_text(f"Unknown command: {command_name}")
 

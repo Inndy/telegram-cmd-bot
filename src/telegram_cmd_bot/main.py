@@ -31,13 +31,6 @@ def load_config():
         logging.error(f"commands.json not found at {config_path}")
         COMMANDS_CONFIG = {}
 
-# Helper to look up shell command
-def get_command_config(cmd_name):
-    return COMMANDS_CONFIG.get(cmd_name, {})
-
-def get_shell_command(cmd_name):
-    return get_command_config(cmd_name).get("shell")
-
 async def check_and_handle_auth(update: Update) -> bool:
     user_id = update.effective_user.id
     if check_whitelist(user_id):
@@ -66,7 +59,7 @@ async def generic_command_handler(update: Update, context: ContextTypes.DEFAULT_
     command_name = parts[0]
     args = parts[1].strip() if len(parts) > 1 else ""
 
-    cmd_config = get_command_config(command_name)
+    cmd_config = COMMANDS_CONFIG.get(command_name, {})
     shell_cmd = cmd_config.get("shell")
 
     if shell_cmd:

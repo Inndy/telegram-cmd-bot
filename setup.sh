@@ -58,7 +58,6 @@ fi
 # Ensure we have absolute paths
 PWD=$(pwd)
 PYTHON_EXEC="$PWD/$VENV_DIR/bin/python3"
-SCRIPT_PATH="$PWD/$MAIN_SCRIPT"
 USER_NAME=$(whoami)
 GROUP_NAME=$(id -gn)
 
@@ -77,7 +76,7 @@ Type=simple
 User=$USER_NAME
 Group=$GROUP_NAME
 WorkingDirectory=$PWD
-ExecStart=$PYTHON_EXEC $SCRIPT_PATH
+ExecStart=$PYTHON_EXEC -m telegram_cmd_bot.main
 Restart=always
 RestartSec=5
 
